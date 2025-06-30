@@ -579,6 +579,7 @@ export class DataController {
     renderSubcontractEvolutionChart(subcontracts) {
         const container = document.getElementById('subcontractEvolutionChart')?.parentElement;
         if (!container) return;
+        
         // Recrear el canvas para asegurar que esté limpio
         container.innerHTML = '<div class="chart-wrapper"><canvas id="subcontractEvolutionChart"></canvas></div>';
         const canvas = document.getElementById('subcontractEvolutionChart');
@@ -586,37 +587,58 @@ export class DataController {
             container.innerHTML = '<p>Error: No se pudo crear el canvas para el gráfico.</p>';
             return;
         }
+        
         // Obtener el subcontrato seleccionado
         const subcontractSelect = document.getElementById('subcontractSelect');
         const selectedSubcontract = subcontractSelect ? subcontractSelect.value : 'all';
-        // Obtener los datos filtrados
-        let data = [];
-        if (selectedSubcontract && selectedSubcontract !== 'all') {
-            const found = subcontracts.find(sub => sub.name === selectedSubcontract);
-            data = found ? found.items : [];
-        } else {
-            data = subcontracts.flatMap(sub => sub.items);
-        }
-        if (!data.length) {
+        
+        // Usar todos los datos de evolución temporal disponibles
+        const evolutionData = this.state.currentEvolutionData.length > 0 
+            ? this.state.currentEvolutionData 
+            : this.state.currentFilteredData;
+            
+        if (!evolutionData.length) {
             container.innerHTML = '<p>No hay datos para mostrar el gráfico de evolución.</p>';
             return;
         }
+        
+        // Filtrar los datos por subcontrato si es necesario
+        let filteredData = evolutionData;
+        if (selectedSubcontract && selectedSubcontract !== 'all') {
+            filteredData = evolutionData.filter(item => item.Subcontrato === selectedSubcontract);
+        }
+        
+        if (!filteredData.length) {
+            container.innerHTML = '<p>No hay datos para mostrar el gráfico de evolución del subcontrato seleccionado.</p>';
+            return;
+        }
+        
         // Destruir gráfico anterior si existe
         if (window.app && window.app.state && window.app.state.charts && window.app.state.charts.subcontractEvolution) {
             window.app.state.charts.subcontractEvolution.destroy();
         }
+        
         // Importar y graficar usando EvolutionChart
         import('../app/EvolutionChart.js').then(module => {
             // Usar una clave separada para el gráfico de subcontrato
             if (!window.app.state.charts) window.app.state.charts = {};
+            
+            // Calcular la meta apropiada basada en el total de preguntas del subcontrato
+            let filterType = 'TODOS';
+            if (selectedSubcontract && selectedSubcontract !== 'all') {
+                // Para un subcontrato específico, usar el tipo 'TODOS' pero con los datos ya filtrados
+                filterType = 'TODOS';
+            }
+            
             module.updateEvolutionChart(
-                data,
-                'TODOS',
+                filteredData,
+                filterType,
                 { evolutionChartContainer: container },
                 window.app.state.charts,
                 canvas
             );
         }).catch(error => {
+            console.error('Error al cargar el gráfico de evolución:', error);
             container.innerHTML = '<p>Error al cargar el gráfico de evolución.</p>';
         });
     }

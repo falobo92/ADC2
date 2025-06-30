@@ -80,7 +80,7 @@
         <!-- ===== CONTENIDO PRINCIPAL ===== -->
         <main class="main-content">
             <header class="main-header">
-                <button type="button" class="menu-toggle" onclick="toggleSidebar()">
+                <button type="button" class="menu-toggle" onclick="toggleSidebar()" title="Abrir/cerrar menú">
                     <i class="fas fa-bars"></i>
                 </button>
                 
@@ -210,17 +210,19 @@
                             </div>
                         </div>
                     </div>
-                    
-
                 </div>
 
                 <div id="main-tab-subcontracts" class="main-tab-content hidden">
-                    <div class="section-header">
-                        <h3>Análisis de Subcontratos</h3>
-                        <p class="section-description">Gestión y seguimiento de todos los subcontratos del proyecto</p>
-                        <button class="btn btn-secondary" onclick="window.app.exportAllSubcontractsToExcel()" style="margin-left:auto;" title="Exportar todos los subcontratos a Excel">
-                            <i class="fas fa-file-excel"></i> Exportar todos a Excel
-                        </button>
+                    <div class="section-header with-actions">
+                        <div class="section-content">
+                            <h3>Análisis de Subcontratos</h3>
+                            <p class="section-description">Gestión y seguimiento de todos los subcontratos del proyecto</p>
+                        </div>
+                        <div class="section-actions">
+                            <button type="button" class="btn btn-secondary" onclick="window.app.exportAllSubcontractsToExcel()" title="Exportar todos los subcontratos a Excel">
+                                <i class="fas fa-file-excel"></i> Exportar todos a Excel
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Controles de filtrado para subcontratos -->
@@ -299,7 +301,10 @@
                 </div>
 
                 <div id="main-tab-roles" class="main-tab-content hidden">
-                    <div class="section-header"><h3>Análisis por Roles</h3></div>
+                    <div class="section-header">
+                        <h3>Análisis por Roles</h3>
+                        <p class="section-description">Distribución de carga de trabajo por persona y estado</p>
+                    </div>
                     <div class="roles-controls" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
                         <label for="rolesSortSelect">Ordenar por:</label>
                         <select id="rolesSortSelect">
@@ -332,7 +337,10 @@
                 </div>
                 
                 <div id="main-tab-reports" class="main-tab-content hidden">
-                    <div class="section-header"><h3>Generación de Reportes</h3></div>
+                    <div class="section-header">
+                        <h3>Generación de Reportes</h3>
+                        <p class="section-description">Herramientas para generar informes y análisis personalizados</p>
+                    </div>
                     <div id="comparisonContainer" class="card"><p>Sección de reportes en desarrollo.</p></div>
                 </div>
             </div>
