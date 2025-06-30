@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Avance de Proyecto ADC/PAC</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ===== LOADER GLOBAL ===== -->
+    <div id="globalLoader" class="hidden">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <!-- ===== CONTENEDOR DE NOTIFICACIONES TOAST ===== -->
+    <div id="toastContainer"></div>
+
+    <div class="dashboard-layout">
+        <!-- ===== BARRA LATERAL (SIDEBAR) ===== -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-chart-line"></i>
+                <h2>Control ADC</h2>
+            </div>
+
+            <div class="sidebar-content">
+                <section class="sidebar-section">
+                    <h3>Filtros</h3>
+                    <div class="filter-group">
+                        <label for="weekSelect">Semana</label>
+                        <select id="weekSelect"></select>
+                        
+                        <label for="daySelect">Fecha de Reporte</label>
+                        <select id="daySelect"></select>
+                        
+                        <label for="tematicaSelect">Temática</label>
+                        <select id="tematicaSelect"></select>
+                        
+                        <label for="itemSelect">Ítem</label>
+                        <select id="itemSelect"></select>
+                        
+                        <label for="personSelect">Persona</label>
+                        <select id="personSelect"></select>
+                        
+                        <label for="stateSelect">Estado</label>
+                        <select id="stateSelect"></select>
+                    </div>
+                </section>
+                
+                <section class="sidebar-section actions">
+                    <h3>Acciones</h3>
+                    <button class="btn btn-secondary" onclick="clearAllFilters()">
+                        <i class="fas fa-filter-circle-xmark"></i> Limpiar Filtros
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Exportar a Excel
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllData()">
+                        <i class="fas fa-trash-alt"></i> Eliminar Datos
+                    </button>
+                </section>
+            </div>
+
+            <div class="sidebar-footer">
+                <span>Versión: 3.0.0</span>
+            </div>
+        </aside>
+
+        <!-- ===== CONTENIDO PRINCIPAL ===== -->
+        <main class="main-content">
+            <header class="main-header">
+                <button type="button" class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <!-- Botón de cargar datos en el header -->
+                <div class="header-file-upload">
+                    <label for="fileInput" class="file-input-label">
+                        <i class="fas fa-upload"></i> Cargar Datos
+                    </label>
+                    <input type="file" id="fileInput" multiple accept=".json">
+                    <div id="fileNameDisplay" class="file-name-display">
+                        <i class="fas fa-info-circle"></i><span>Ningún archivo seleccionado</span>
+                    </div>
+                </div>
+                
+                <div class="header-stats">
+                    <!-- Datos Generales (izquierda) -->
+                    <div class="header-stats-left">
+                        <div class="header-stat-item">
+                            <span class="label">Total Items</span>
+                            <span id="headerTotalItems" class="value">0</span>
+                        </div>
+                        <div class="header-stat-item">
+                            <span class="label">Items ADC</span>
+                            <span id="headerTotalADC" class="value">0</span>
+                        </div>
+                        <div class="header-stat-item">
+                            <span class="label">Items PAC</span>
+                            <span id="headerTotalPAC" class="value">0</span>
+                        </div>
+                    </div>
+                    <!-- Estado de Progreso (derecha) -->
+                    <div class="header-stats-right">
+                        <div class="header-stat-item">
+                            <span class="label">Incorporados</span>
+                            <span id="headerIncorporated" class="value">0</span>
+                        </div>
+                        <div class="header-stat-item">
+                            <span class="label">En Rev. Editorial</span>
+                            <span id="headerEditorial" class="value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="alertBox" class="alert hidden"></div>
+            
+            <div id="noDataMessage" class="no-data-message hidden">
+                <i class="fas fa-folder-open"></i>
+                <h2>No hay datos cargados</h2>
+                <p>Por favor, carga uno o más archivos JSON para comenzar el análisis.</p>
+            </div>
+
+            <!-- VISTA PRINCIPAL DEL DASHBOARD -->
+            <div id="analysisContainer">
+                <div class="main-tabs">
+                    <button class="main-tab-btn active" data-tab="dashboard" onclick="switchMainTab('dashboard')">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </button>
+                    <button class="main-tab-btn" data-tab="evolution" onclick="switchMainTab('evolution')">
+                        <i class="fas fa-chart-line"></i> Evolución
+                    </button>
+                    <button class="main-tab-btn" data-tab="subcontracts" onclick="switchMainTab('subcontracts')">
+                        <i class="fas fa-building"></i> Subcontratos
+                    </button>
+                    <button class="main-tab-btn" data-tab="roles" onclick="switchMainTab('roles')">
+                        <i class="fas fa-users"></i> Roles
+                    </button>
+                    <button class="main-tab-btn" data-tab="reports" onclick="switchMainTab('reports')">
+                        <i class="fas fa-file-invoice"></i> Reportes
+                    </button>
+                </div>
+
+                <div id="main-tab-dashboard" class="main-tab-content">
+                    <!-- Gráficos por Estado -->
+                    <div class="section-header" data-section="charts">
+                        <h3>Distribución por Estado</h3>
+                    </div>
+                    <div id="chartsContainer" class="charts-container">
+                        <div id="chartTotalCard" class="chart-card">
+                            <h3>Total General</h3>
+                            <div class="chart-wrapper"><canvas id="chartTotal"></canvas></div>
+                            <div class="legend-wrapper">
+                                <table id="legendTotal"><thead><tr><th>Estado</th><th>Cant.</th><th>%</th></tr></thead><tbody></tbody></table>
+                            </div>
+                        </div>
+                        <div id="chartADCCard" class="chart-card">
+                            <h3>Adenda Complementaria</h3>
+                            <div class="chart-wrapper"><canvas id="chartADC"></canvas></div>
+                             <div class="legend-wrapper">
+                                <table id="legendADC"><thead><tr><th>Estado</th><th>Cant.</th><th>%</th></tr></thead><tbody></tbody></table>
+                            </div>
+                        </div>
+                        <div id="chartPACCard" class="chart-card">
+                            <h3>Adenda Ciudadana</h3>
+                            <div class="chart-wrapper"><canvas id="chartPAC"></canvas></div>
+                             <div class="legend-wrapper">
+                                <table id="legendPAC"><thead><tr><th>Estado</th><th>Cant.</th><th>%</th></tr></thead><tbody></tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="main-tab-evolution" class="main-tab-content hidden">
+                    <div class="section-header">
+                        <h3>Evolución Temporal del Proyecto</h3>
+                        <p class="section-description">Análisis del progreso semanal y comparación con metas establecidas</p>
+                    </div>
+                    
+                    <!-- Controles de filtrado para evolución -->
+                    <div class="evolution-controls">
+                        <div class="filter-group">
+                            <label for="evolutionFilterType">Tipo de Análisis</label>
+                            <select id="evolutionFilterType" onchange="updateEvolutionView()">
+                                <option value="TODOS">Todos los Documentos</option>
+                                <option value="ADC">Solo ADC</option>
+                                <option value="PAC">Solo PAC</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráfico de evolución -->
+                    <div class="evolution-chart-container">
+                        <div class="chart-card">
+                            <h4>Progreso Semanal</h4>
+                            <div class="chart-wrapper">
+                                <canvas id="evolutionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+                </div>
+
+                <div id="main-tab-subcontracts" class="main-tab-content hidden">
+                    <div class="section-header">
+                        <h3>Análisis de Subcontratos</h3>
+                        <p class="section-description">Gestión y seguimiento de todos los subcontratos del proyecto</p>
+                        <button class="btn btn-secondary" onclick="window.app.exportAllSubcontractsToExcel()" style="margin-left:auto;" title="Exportar todos los subcontratos a Excel">
+                            <i class="fas fa-file-excel"></i> Exportar todos a Excel
+                        </button>
+                    </div>
+                    
+                    <!-- Controles de filtrado para subcontratos -->
+                    <div class="subcontracts-controls">
+                        <div class="filter-group">
+                            <label for="subcontractSelect">Seleccionar Subcontrato</label>
+                            <select id="subcontractSelect" onchange="updateSubcontractView()">
+                                <option value="all">Todos los Subcontratos</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Estadísticas generales de subcontratos -->
+                    <div class="subcontracts-stats">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>Total Subcontratos</h4>
+                                    <span id="totalSubcontracts" class="stat-value">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>Completados</h4>
+                                    <span id="completedSubcontracts" class="stat-value">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>En Progreso</h4>
+                                    <span id="inProgressSubcontracts" class="stat-value">0</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>Avance General</h4>
+                                    <span id="overallProgress" class="stat-value">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de subcontratos -->
+                    <div class="subcontracts-overview">
+                        <div class="subcontracts-grid" id="subcontractsGrid">
+                            <!-- Los subcontratos se generarán dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <!-- Gráfico de evolución temporal para subcontratos -->
+                    <div class="subcontract-evolution-section">
+                        <div class="section-header">
+                            <h3>Evolución Temporal por Subcontrato</h3>
+                        </div>
+                        <div class="evolution-chart-container">
+                            <div class="chart-card">
+                                <h4>Progreso Semanal</h4>
+                                <div class="chart-wrapper">
+                                    <canvas id="subcontractEvolutionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="main-tab-roles" class="main-tab-content hidden">
+                    <div class="section-header"><h3>Análisis por Roles</h3></div>
+                    <div class="roles-controls" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                        <label for="rolesSortSelect">Ordenar por:</label>
+                        <select id="rolesSortSelect">
+                            <option value="carga">Carga</option>
+                            <option value="nombre">Nombre</option>
+                        </select>
+                        <label for="rolesStateSelect">Estado:</label>
+                        <select id="rolesStateSelect">
+                            <option value="todos">Todos</option>
+                            <option value="En elaboración">En elaboración</option>
+                            <option value="En elaboración cartografía">En elaboración cartografía</option>
+                            <option value="Subcontrato">Subcontrato</option>
+                            <option value="En revisor técnico">En revisor técnico</option>
+                            <option value="En coordinador">En coordinador</option>
+                            <option value="En revisor editorial">En revisor editorial</option>
+                            <option value="Incorporada">Incorporada</option>
+                        </select>
+                        <input type="text" id="rolesSearch" placeholder="Buscar persona..." style="min-width:180px;" />
+                        <button class="btn btn-success" id="exportRolesExcelBtn" title="Exportar tabla de roles a Excel">
+                            <i class="fas fa-file-excel"></i> Exportar a Excel
+                        </button>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Comparativo de Roles y Estados</h4>
+                        <div class="chart-wrapper" style="height:420px;overflow-x:auto;">
+                            <canvas id="rolesChart"></canvas>
+                        </div>
+                        <div id="rolesLegend" class="legend-wrapper compact-legend" style="margin-top:0.5rem;"></div>
+                    </div>
+                </div>
+                
+                <div id="main-tab-reports" class="main-tab-content hidden">
+                    <div class="section-header"><h3>Generación de Reportes</h3></div>
+                    <div id="comparisonContainer" class="card"><p>Sección de reportes en desarrollo.</p></div>
+                </div>
+            </div>
+
+            <!-- VISTA DE SUBCONTRATOS -->
+            <div id="subcontractView" class="hidden">
+                 <div class="tabs">
+                    <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Vista General</button>
+                    <button class="tab-btn" data-tab="details" onclick="switchTab('details')">Detalles</button>
+                    <button class="tab-btn" data-tab="timeline" onclick="switchTab('timeline')">Cronograma</button>
+                </div>
+                <div id="tab-overview" class="tab-content">
+                    <div id="subcontractProgressContainer" class="card"><p>Vista general de subcontrato en desarrollo.</p></div>
+                </div>
+                <div id="tab-details" class="tab-content hidden"><p>Detalles de subcontrato en desarrollo.</p></div>
+                <div id="tab-timeline" class="tab-content hidden"><p>Cronograma de subcontrato en desarrollo.</p></div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- ===== MODAL PARA PREGUNTAS/ITEMS ===== -->
+    <div id="questionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detalle de Items</h3>
+                <button class="close-btn" onclick="closeModal('questionsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <ul id="questionsList"></ul>
+            </div>
+            <div id="modalOverflowNote" class="modal-footer hidden"></div>
+        </div>
+    </div>
+    
+    <!-- ===== LIBRERÍAS JAVASCRIPT ===== -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+    <!-- SheetJS (para exportar a Excel) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- SCRIPT DE LA APLICACIÓN -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
