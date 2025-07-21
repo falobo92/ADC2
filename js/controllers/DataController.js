@@ -526,54 +526,88 @@ export class DataController {
     renderSubcontractsGrid(subcontracts) {
         const gridContainer = document.getElementById('subcontractsGrid');
         if (!gridContainer) return;
+        
         // Calcular el total de preguntas (items) del dataset filtrado
         const totalItems = subcontracts.reduce((acc, sub) => acc + sub.total, 0);
-        const gridHTML = subcontracts.map(subcontract => {
-            const progressPercentage = subcontract.total > 0 ? 
-                Math.round((subcontract.incorporated / subcontract.total) * 100) : 0;
-            const statusClass = subcontract.incorporated === subcontract.total && subcontract.total > 0 ? 
-                'completed' : subcontract.inProgress > 0 || subcontract.editorial > 0 ? 
-                'in-progress' : 'pending';
-            // Calcular % de incidencia
-            const incidencia = totalItems > 0 ? ((subcontract.total / totalItems) * 100).toFixed(1).replace('.', ',') : '0,0';
-            // Calcular pendientes
-            const pendientes = subcontract.total - subcontract.incorporated - subcontract.editorial;
-            // Obtener responsable principal (si existe)
-            let responsable = '';
-            if (subcontract.items && subcontract.items.length > 0) {
-                responsable = subcontract.items[0].Coordinador || subcontract.items[0].Elaborador || subcontract.items[0].Revisor || '';
-            }
-            return `
-                <div class="subcontract-card" data-subcontract="${subcontract.name}">
-                    <div class="subcontract-header">
-                        <div>
-                            <h4 class="subcontract-title">${subcontract.name}</h4>
-                        <span class="subcontract-status ${statusClass}">
-                            ${statusClass === 'completed' ? 'Completado' : 
-                              statusClass === 'in-progress' ? 'En Progreso' : 'Pendiente'}
-                        </span>
-                            <span class="subcontract-incidencia" title="Porcentaje de incidencia en el total de preguntas">${incidencia}% del total</span>
-                        </div>
-                        <button class="btn btn-info btn-details" onclick="window.app.showSubcontractDetailsModal('${subcontract.name}')" title="Ver detalles"><i class="fas fa-eye"></i></button>
-                        <button class="btn btn-success btn-export" onclick="window.app.exportSubcontractToExcel('${subcontract.name}')" title="Exportar preguntas a Excel"><i class="fas fa-file-excel"></i></button>
-                        </div>
-                    <div class="progress-bar-outer">
-                        <div class="progress-bar-inner" style="width: ${progressPercentage}%"></div>
-                        <span class="progress-bar-label">${progressPercentage}%</span>
-                        </div>
-                    <div class="subcontract-stats-row">
-                        <div class="stat-block"><span class="stat-label">Total</span><span class="stat-value">${subcontract.total}</span></div>
-                        <div class="stat-block"><span class="stat-label">Incorporadas</span><span class="stat-value completed">${subcontract.incorporated}</span></div>
-                        <div class="stat-block"><span class="stat-label">Editorial</span><span class="stat-value editorial">${subcontract.editorial}</span></div>
-                        <div class="stat-block"><span class="stat-label">Pendientes</span><span class="stat-value pending">${pendientes}</span></div>
-                    </div>
-                    <div class="subcontract-footer">
-                        <span class="footer-label"><i class="fas fa-user"></i> Responsable: ${responsable || 'N/A'}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        gridContainer.innerHTML = gridHTML;
+        
+        // Crear tabla interactiva en lugar de tarjetas
+        const tableHTML = `
+            <div class="subcontracts-table-container">
+                <table class="subcontracts-table">
+                    <thead>
+                        <tr>
+                            <th class="subcontract-name-col">Subcontrato</th>
+                            <th class="subcontract-info-col">% Total / Responsable</th>
+                            <th class="stat-col">Total</th>
+                            <th class="stat-col">En elaboración</th>
+                            <th class="stat-col">Incorporadas</th>
+                            <th class="stat-col">Editorial</th>
+                            <th class="stat-col">Pendientes</th>
+                            <th class="progress-col">Progreso</th>
+                            <th class="actions-col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${subcontracts.map(subcontract => {
+                            const enElaboracion = subcontract.items.filter(item => item.Estado === 'En elaboración').length;
+                            const pendientes = subcontract.total - subcontract.incorporated - subcontract.editorial - enElaboracion;
+                            const progressPercentage = subcontract.total > 0 ? Math.round((subcontract.incorporated / subcontract.total) * 100) : 0;
+                            const incidencia = totalItems > 0 ? ((subcontract.total / totalItems) * 100).toFixed(1) : '0.0';
+                            
+                            // Obtener responsable principal
+                            let responsable = '';
+                            if (subcontract.items && subcontract.items.length > 0) {
+                                responsable = subcontract.items[0].Coordinador || subcontract.items[0].Elaborador || subcontract.items[0].Revisor || '';
+                            }
+                            
+                            return `
+                                <tr class="subcontract-row" data-subcontract="${subcontract.name}">
+                                    <td class="subcontract-name">
+                                        <h4>${subcontract.name}</h4>
+                                    </td>
+                                    <td class="subcontract-info">
+                                        <div class="info-row">${incidencia}% del total</div>
+                                        ${responsable ? `<div class="info-row responsable"><i class="fas fa-user"></i> ${responsable}</div>` : '<div class="info-row">Sin responsable</div>'}
+                                    </td>
+                                    <td class="stat-cell clickable" onclick="window.app.showSubcontractStateModal('${subcontract.name}', 'Total')">
+                                        <span class="stat-value">${subcontract.total}</span>
+                                    </td>
+                                    <td class="stat-cell clickable" onclick="window.app.showSubcontractStateModal('${subcontract.name}', 'En elaboración')">
+                                        <span class="stat-value elaboracion">${enElaboracion}</span>
+                                    </td>
+                                    <td class="stat-cell clickable" onclick="window.app.showSubcontractStateModal('${subcontract.name}', 'Incorporada')">
+                                        <span class="stat-value incorporated">${subcontract.incorporated}</span>
+                                    </td>
+                                    <td class="stat-cell clickable" onclick="window.app.showSubcontractStateModal('${subcontract.name}', 'En revisor editorial')">
+                                        <span class="stat-value editorial">${subcontract.editorial}</span>
+                                    </td>
+                                    <td class="stat-cell clickable" onclick="window.app.showSubcontractStateModal('${subcontract.name}', 'Pendientes')">
+                                        <span class="stat-value pending">${pendientes}</span>
+                                    </td>
+                                    <td class="progress-cell">
+                                        <div class="progress-container">
+                                            <div class="progress-bar-incorporated" style="width: ${subcontract.total > 0 ? (subcontract.incorporated / subcontract.total) * 100 : 0}%;"></div>
+                                            <div class="progress-bar-elaboration" style="width: ${subcontract.total > 0 ? (enElaboracion / subcontract.total) * 100 : 0}%; left: ${subcontract.total > 0 ? (subcontract.incorporated / subcontract.total) * 100 : 0}%;"></div>
+                                        </div>
+                                        <div class="progress-text">${subcontract.incorporated} inc. / ${enElaboracion} elab.</div>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <button class="btn-icon" onclick="window.app.showSubcontractDetailsModal('${subcontract.name}')" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-icon" onclick="window.app.exportSubcontractToExcel('${subcontract.name}')" title="Exportar">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        gridContainer.innerHTML = tableHTML;
     }
     
     renderSubcontractEvolutionChart(subcontracts) {

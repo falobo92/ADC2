@@ -210,21 +210,32 @@ export class DashboardApp {
         const total = filteredData.length;
         const incorporadas = filteredData.filter(item => item.Estado === 'Incorporada').length;
         const editorial = filteredData.filter(item => item.Estado === 'En revisor editorial').length;
+        const enElaboracion = filteredData.filter(item => item.Estado === 'En elaboración').length;
         const progreso = total > 0 ? Math.round((incorporadas / total) * 100) : 0;
+        
         // Actualizar título del modal
         const modalTitle = document.getElementById('modalTitle');
-        if (modalTitle) modalTitle.textContent = `Subcontrato: ${subcontractName}`;
+        if (modalTitle) modalTitle.textContent = `Detalles: ${subcontractName} (${total} preguntas)`;
+        
         // Construir lista de items
         const questionsList = document.getElementById('questionsList');
         if (questionsList) {
             questionsList.innerHTML = `
-                <li><strong>Total Items:</strong> ${total}</li>
-                <li><strong>Incorporadas:</strong> ${incorporadas}</li>
-                <li><strong>En Editorial:</strong> ${editorial}</li>
-                <li><strong>Progreso:</strong> ${progreso}%</li>
-                <hr>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: center;">
+                        <div><strong>Total:</strong> ${total}</div>
+                        <div><strong>Incorporadas:</strong> <span style="color: #28a745;">${incorporadas}</span></div>
+                        <div><strong>En Elaboración:</strong> <span style="color: #ffc107;">${enElaboracion}</span></div>
+                        <div><strong>En Editorial:</strong> <span style="color: #dc3545;">${editorial}</span></div>
+                    </div>
+                    <div style="text-align: center; margin-top: 0.5rem;">
+                        <strong>Progreso: ${progreso}%</strong>
+                    </div>
+                </div>
             `;
-            filteredData.forEach(item => {
+            
+            const maxDisplayItems = CONFIG.PAGINATION.MAX_MODAL_ITEMS || 200;
+            filteredData.slice(0, maxDisplayItems).forEach(item => {
                 const li = document.createElement('li');
                 li.innerHTML = `
                     <div class="question-item-compact">
@@ -249,7 +260,88 @@ export class DashboardApp {
                 `;
                 questionsList.appendChild(li);
             });
+            
+            const modalOverflowNote = document.getElementById('modalOverflowNote');
+            if (modalOverflowNote) {
+                if (filteredData.length > maxDisplayItems) {
+                    modalOverflowNote.innerHTML = `<div style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: 8px; margin-top: 1rem;"><i class="fas fa-info-circle" style="color: var(--info-color); margin-right: 0.5rem;"></i><strong>Mostrando ${maxDisplayItems} de ${filteredData.length} items</strong><br><small>Usa filtros para ver resultados más específicos</small></div>`;
+                    modalOverflowNote.classList.remove('hidden');
+                } else {
+                    modalOverflowNote.classList.add('hidden');
+                }
+            }
         }
+        // Mostrar el modal
+        this.uiController.showModal('questionsModal');
+    }
+
+    showSubcontractStateModal(subcontractName, estado) {
+        // Filtrar los datos del subcontrato
+        let filteredData = this.state.currentFilteredData.filter(item => item.Subcontrato === subcontractName);
+        
+        // Filtrar por estado específico
+        if (estado === 'Total') {
+            // No filtrar más, mostrar todos
+        } else if (estado === 'Pendientes') {
+            // Filtrar los que no son Incorporada ni En revisor editorial
+            filteredData = filteredData.filter(item => 
+                item.Estado !== 'Incorporada' && item.Estado !== 'En revisor editorial' && item.Estado !== 'En elaboración'
+            );
+        } else {
+            filteredData = filteredData.filter(item => item.Estado === estado);
+        }
+        
+        if (!filteredData.length) {
+            this.notifications.showToast(`No hay preguntas en estado "${estado}" para este subcontrato`, 'info');
+            return;
+        }
+        
+        // Actualizar título del modal
+        const modalTitle = document.getElementById('modalTitle');
+        if (modalTitle) modalTitle.textContent = `${subcontractName} - ${estado} (${filteredData.length} items)`;
+        
+        // Construir lista de items
+        const questionsList = document.getElementById('questionsList');
+        if (questionsList) {
+            questionsList.innerHTML = '';
+            const maxDisplayItems = CONFIG.PAGINATION.MAX_MODAL_ITEMS || 200;
+            filteredData.slice(0, maxDisplayItems).forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="question-item-compact">
+                        <div class="question-header-compact">
+                            <div class="question-info">
+                                <span class="question-id">${item.ID_Corregido || item.ID}</span>
+                                <span class="document-badge">${item.Documento || 'N/A'}</span>
+                                <span class="status-badge-compact" style="background: ${ESTADO_COLORS[item.Estado] || ESTADO_COLORS.default};color: ${ESTADO_FONT_COLORS[item.Estado] || ESTADO_FONT_COLORS.default};">${item.Estado}</span>
+                            </div>
+                        </div>
+                        <div class="question-meta">
+                            <span class="meta-item"><strong>Temática:</strong> ${item.Tematica || 'N/A'}</span>
+                            <span class="meta-separator">•</span>
+                            <span class="meta-item"><strong>Elaborador:</strong> ${item.Elaborador || 'N/A'}</span>
+                            <span class="meta-separator">•</span>
+                            <span class="meta-item"><strong>Revisor:</strong> ${item.Revisor || 'N/A'}</span>
+                            <span class="meta-separator">•</span>
+                            <span class="meta-item"><strong>Coordinador:</strong> ${item.Coordinador || 'N/A'}</span>
+                        </div>
+                        ${item.Pregunta || item.Consulta ? `<div class="question-text"><div class="question-content">${item.Pregunta || item.Consulta}</div></div>` : ''}
+                    </div>
+                `;
+                questionsList.appendChild(li);
+            });
+            
+            const modalOverflowNote = document.getElementById('modalOverflowNote');
+            if (modalOverflowNote) {
+                if (filteredData.length > maxDisplayItems) {
+                    modalOverflowNote.innerHTML = `<div style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: 8px; margin-top: 1rem;"><i class="fas fa-info-circle" style="color: var(--info-color); margin-right: 0.5rem;"></i><strong>Mostrando ${maxDisplayItems} de ${filteredData.length} items</strong><br><small>Usa filtros para ver resultados más específicos</small></div>`;
+                    modalOverflowNote.classList.remove('hidden');
+                } else {
+                    modalOverflowNote.classList.add('hidden');
+                }
+            }
+        }
+        
         // Mostrar el modal
         this.uiController.showModal('questionsModal');
     }
