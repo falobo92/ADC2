@@ -530,6 +530,64 @@ export class DataController {
         // Calcular el total de preguntas (items) del dataset filtrado
         const totalItems = subcontracts.reduce((acc, sub) => acc + sub.total, 0);
         
+        // Mapeo de encargados por subcontrato
+        const encargadosPorSubcontrato = {
+            'OWNER TEAM': 'Nicolás Ibáñez',
+            'FISIOAQUA - MEDIO MARINO': 'Sofía Ramos',
+            'FISIOAQUA - Medio marino': 'Sofía Ramos', // Formato real del sistema
+            'ECOTECNOS - MODELACIÓN PLUMA SALINA': 'Sofía Ramos',
+            'ECOTECNOS - Modelación pluma salina': 'Sofía Ramos', // Formato real del sistema
+            'SUBCONTRATO CALIDAD DEL AIRE': 'Marcelo Araya',
+            'HUGO DÍAZ - MICRORRUTEO Y AVIFAUNA': 'Chi-le Sun',
+            'HUGO DÍAZ - Microrruteo y avifauna': 'Chi-le Sun', // Formato real del sistema
+            'SEDNA - ARQUEOLOGÍA': 'Sofía Ramos',
+            'SEDNA - Arqueología': 'Sofía Ramos', // Formato real del sistema
+            'ECODIVERSIDAD - CHINCHILLA': 'Chi-le Sun',
+            'ECODIVERSIDAD - Chinchilla': 'Chi-le Sun', // Formato real del sistema
+            'PAISAJE AMBIENTAL - PAISAJE': 'Chi-le Sun',
+            'PAISAJE AMBIENTAL - Paisaje': 'Chi-le Sun', // Formato real del sistema
+            'EIS AMBIENTAL - MEDIO HUMANO': 'Gloria Arriagada',
+            'EIS AMBIENTAL - Medio humano': 'Gloria Arriagada', // Formato real del sistema
+            'MARISOL - MEDIO MARINO': 'Sofía Ramos',
+            'MARISOL - Medio marino': 'Sofía Ramos', // Formato real del sistema
+            'SUBCONTRATO PAS138': 'Sofía Ramos',
+            'RUIDO AMBIENTAL - RUIDO': 'Marcelo Araya',
+            'RUIDO AMBIENTAL - Ruido': 'Marcelo Araya', // Formato real del sistema
+            // Posibles variaciones con espacios o diferencias menores
+            'FISIOAQUA- MEDIO MARINO': 'Sofía Ramos',
+            'FISIOAQUA -MEDIO MARINO': 'Sofía Ramos',
+            'FISIOAQUA-MEDIO MARINO': 'Sofía Ramos',
+            'ECOTECNOS- MODELACIÓN PLUMA SALINA': 'Sofía Ramos',
+            'ECOTECNOS -MODELACIÓN PLUMA SALINA': 'Sofía Ramos',
+            'ECOTECNOS-MODELACIÓN PLUMA SALINA': 'Sofía Ramos',
+            'HUGO DÍAZ- MICRORRUTEO Y AVIFAUNA': 'Chi-le Sun',
+            'HUGO DÍAZ -MICRORRUTEO Y AVIFAUNA': 'Chi-le Sun',
+            'HUGO DÍAZ-MICRORRUTEO Y AVIFAUNA': 'Chi-le Sun',
+            'SEDNA- ARQUEOLOGÍA': 'Sofía Ramos',
+            'SEDNA -ARQUEOLOGÍA': 'Sofía Ramos',
+            'SEDNA-ARQUEOLOGÍA': 'Sofía Ramos',
+            'ECODIVERSIDAD- CHINCHILLA': 'Chi-le Sun',
+            'ECODIVERSIDAD -CHINCHILLA': 'Chi-le Sun',
+            'ECODIVERSIDAD-CHINCHILLA': 'Chi-le Sun',
+            'PAISAJE AMBIENTAL- PAISAJE': 'Chi-le Sun',
+            'PAISAJE AMBIENTAL -PAISAJE': 'Chi-le Sun',
+            'PAISAJE AMBIENTAL-PAISAJE': 'Chi-le Sun',
+            'EIS AMBIENTAL- MEDIO HUMANO': 'Gloria Arriagada',
+            'EIS AMBIENTAL -MEDIO HUMANO': 'Gloria Arriagada',
+            'EIS AMBIENTAL-MEDIO HUMANO': 'Gloria Arriagada',
+            'MARISOL- MEDIO MARINO': 'Sofía Ramos',
+            'MARISOL -MEDIO MARINO': 'Sofía Ramos',
+            'MARISOL-MEDIO MARINO': 'Sofía Ramos',
+            'RUIDO AMBIENTAL- RUIDO': 'Marcelo Araya',
+            'RUIDO AMBIENTAL -RUIDO': 'Marcelo Araya',
+            'RUIDO AMBIENTAL-RUIDO': 'Marcelo Araya',
+            // Sin subcontrato
+            'Sin Subcontrato': 'Sin asignar',
+            '': 'Sin asignar',
+            null: 'Sin asignar',
+            undefined: 'Sin asignar'
+        };
+        
         // Crear tabla interactiva en lugar de tarjetas
         const tableHTML = `
             <div class="subcontracts-table-container">
@@ -554,10 +612,12 @@ export class DataController {
                             const progressPercentage = subcontract.total > 0 ? Math.round((subcontract.incorporated / subcontract.total) * 100) : 0;
                             const incidencia = totalItems > 0 ? ((subcontract.total / totalItems) * 100).toFixed(1) : '0.0';
                             
-                            // Obtener responsable principal
-                            let responsable = '';
-                            if (subcontract.items && subcontract.items.length > 0) {
-                                responsable = subcontract.items[0].Coordinador || subcontract.items[0].Elaborador || subcontract.items[0].Revisor || '';
+                            // Obtener encargado del mapeo
+                            const responsable = encargadosPorSubcontrato[subcontract.name] || 'Sin asignar';
+                            
+                            // Debug: mostrar subcontratos no encontrados
+                            if (!encargadosPorSubcontrato[subcontract.name]) {
+                                console.log('Subcontrato no encontrado en mapeo:', `"${subcontract.name}"`);
                             }
                             
                             return `
@@ -567,7 +627,7 @@ export class DataController {
                                     </td>
                                     <td class="subcontract-info">
                                         <div class="info-row">${incidencia}% del total</div>
-                                        ${responsable ? `<div class="info-row responsable"><i class="fas fa-user"></i> ${responsable}</div>` : '<div class="info-row">Sin responsable</div>'}
+                                        <div class="info-row responsable"><i class="fas fa-user"></i> ${responsable}</div>
                                     </td>
                                     <td class="stat-cell clickable" onclick="window.app.showSubcontractStateModal('${subcontract.name}', 'Total')">
                                         <span class="stat-value">${subcontract.total}</span>
