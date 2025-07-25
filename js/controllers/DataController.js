@@ -495,23 +495,30 @@ export class DataController {
     }
     
     updateSubcontractStats(subcontracts) {
-        const totalSubcontracts = subcontracts.length;
-        const completedSubcontracts = subcontracts.filter(sub => 
-            sub.incorporated === sub.total && sub.total > 0
-        ).length;
-        const inProgressSubcontracts = subcontracts.filter(sub => 
-            sub.inProgress > 0 || sub.editorial > 0
-        ).length;
+        // Subcontratos respondiendo (que tienen al menos una pregunta)
+        const totalSubcontracts = subcontracts.filter(sub => sub.total > 0).length;
         
-        const totalItems = subcontracts.reduce((acc, sub) => acc + sub.total, 0);
+        // Total de preguntas (suma de todos los totales)
+        const totalQuestions = subcontracts.reduce((acc, sub) => acc + sub.total, 0);
+        
+        // Total incorporadas (suma de todas las incorporadas)
         const totalIncorporated = subcontracts.reduce((acc, sub) => acc + sub.incorporated, 0);
-        const overallProgress = totalItems > 0 ? Math.round((totalIncorporated / totalItems) * 100) : 0;
+        
+        // Total en elaboración (suma de todas las preguntas en elaboración)
+        const totalElaboracion = subcontracts.reduce((acc, sub) => {
+            const enElaboracion = sub.items ? sub.items.filter(item => item.Estado === 'En elaboración').length : 0;
+            return acc + enElaboracion;
+        }, 0);
+        
+        // Avance General (incorporadas sobre total en subcontrato)
+        const overallProgress = totalQuestions > 0 ? Math.round((totalIncorporated / totalQuestions) * 100) : 0;
         
         // Actualizar elementos del DOM
         const elements = {
             'totalSubcontracts': totalSubcontracts,
-            'completedSubcontracts': completedSubcontracts,
-            'inProgressSubcontracts': inProgressSubcontracts,
+            'totalQuestions': totalQuestions,
+            'totalElaboracion': totalElaboracion,
+            'totalIncorporated': totalIncorporated,
             'overallProgress': `${overallProgress}%`
         };
         
