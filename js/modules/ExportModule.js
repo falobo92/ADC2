@@ -60,6 +60,7 @@ export class ExportModule {
         const pac = data.filter(item => item.Documento === 'PAC').length;
         const incorporated = data.filter(item => item.Estado === 'Incorporada').length;
         const editorial = data.filter(item => item.Estado === 'En revisor editorial').length;
+        const pendientes = data.filter(item => item.Estado === 'Pendiente').length;
         
         return {
             total,
@@ -67,6 +68,7 @@ export class ExportModule {
             pac,
             incorporated,
             editorial,
+            pendientes,
             completionRate: total > 0 ? Math.round((incorporated / total) * 100) : 0
         };
     }
@@ -89,6 +91,7 @@ export class ExportModule {
             ['Items PAC', summaryData.pac],
             ['Incorporadas', summaryData.incorporated],
             ['En Revisor Editorial', summaryData.editorial],
+            ['Pendientes', summaryData.pendientes],
             ['Tasa de Completitud (%)', summaryData.completionRate],
             [''],
             ['Fecha de Exportación', new Date().toLocaleDateString('es-CL')]

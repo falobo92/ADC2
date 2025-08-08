@@ -21,6 +21,7 @@ export class DOMManager {
             itemSelect: 'itemSelect',
             personSelect: 'personSelect',
             stateSelect: 'stateSelect',
+            originSelect: 'originSelect',
             subcontractSelect: 'subcontractSelect',
             
             // Indicadores

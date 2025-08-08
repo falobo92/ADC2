@@ -1,4 +1,4 @@
-import { PREDEFINED_DATA, ESTADO_COLORS } from '../config/constants.js';
+import { PREDEFINED_DATA, ESTADO_ORDER } from '../config/constants.js';
 
 // ===== GESTIÓN DE FILTROS =====
 export class FilterManager {
@@ -24,12 +24,15 @@ export class FilterManager {
         // Personas
         this.populateSelect('personSelect', PREDEFINED_DATA.people.sort(), 'Todas las personas');
         
-        // Estados
-        const states = Object.keys(ESTADO_COLORS).filter(s => s !== 'default').sort();
+        // Estados (usar orden predefinido)
+        const states = ESTADO_ORDER;
         this.populateSelect('stateSelect', states, 'Todos los estados');
         
         // Subcontratos
         this.populateSelect('subcontractSelect', PREDEFINED_DATA.subcontracts.sort(), 'Todos los subcontratos');
+
+        // Origen
+        this.populateSelect('originSelect', ['OWNER TEAM', 'Subcontratos (todas las demás)'], 'Todos los orígenes');
     }
     
     populateSelect(selectId, options, defaultText) {
@@ -132,7 +135,8 @@ export class FilterManager {
             item: this.dom.get('itemSelect')?.value || 'all',
             person: this.dom.get('personSelect')?.value || 'all',
             state: this.dom.get('stateSelect')?.value || 'all',
-            subcontract: this.dom.get('subcontractSelect')?.value || 'all'
+            subcontract: this.dom.get('subcontractSelect')?.value || 'all',
+            origin: this.dom.get('originSelect')?.value || 'all'
         };
     }
     

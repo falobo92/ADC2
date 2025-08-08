@@ -655,7 +655,9 @@ function getEstadoColor(estado) {
         'En elaboración': '#ffab00',
         'En coordinador': '#6554c0',
         'En revisor técnico': '#00b8d9',
-        'Subcontrato': '#97a0af'
+        'Subcontrato': '#97a0af',
+        'En elaboración cartografía': '#FFCA3A',
+        'Pendiente': '#D1D5DB'
     };
     return colors[estado] || '#97a0af';
 }

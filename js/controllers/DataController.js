@@ -92,6 +92,11 @@ export class DataController {
             if (filters.tematica !== 'all' && item.Tematica !== filters.tematica) return false;
             if (filters.item !== 'all' && item.Item !== filters.item) return false;
             if (filters.state !== 'all' && item.Estado !== filters.state) return false;
+            if (filters.origin && filters.origin !== 'all') {
+                const isOwner = (item.Subcontrato || '').toUpperCase() === 'OWNER TEAM';
+                if (filters.origin === 'OWNER TEAM' && !isOwner) return false;
+                if (filters.origin === 'Subcontratos (todas las demás)' && isOwner) return false;
+            }
             if (filters.person !== 'all') {
                 const personMatch = item.Elaborador === filters.person || 
                                   item.Revisor === filters.person || 
@@ -108,6 +113,11 @@ export class DataController {
             if (filters.tematica !== 'all' && item.Tematica !== filters.tematica) return false;
             if (filters.item !== 'all' && item.Item !== filters.item) return false;
             if (filters.state !== 'all' && item.Estado !== filters.state) return false;
+            if (filters.origin && filters.origin !== 'all') {
+                const isOwner = (item.Subcontrato || '').toUpperCase() === 'OWNER TEAM';
+                if (filters.origin === 'OWNER TEAM' && !isOwner) return false;
+                if (filters.origin === 'Subcontratos (todas las demás)' && isOwner) return false;
+            }
             if (filters.person !== 'all') {
                 const personMatch = item.Elaborador === filters.person || 
                                   item.Revisor === filters.person || 
@@ -308,7 +318,8 @@ export class DataController {
             'En revisor técnico',
             'En coordinador',
             'En revisor editorial',
-            'Incorporada'
+            'Incorporada',
+            'Pendiente'
         ];
         const estadoColors = {
             'En elaboración': '#f87171',
@@ -317,7 +328,8 @@ export class DataController {
             'En revisor técnico': '#38bdf8',
             'En coordinador': '#6366f1',
             'En revisor editorial': '#be185d',
-            'Incorporada': '#4ade80'
+            'Incorporada': '#4ade80',
+            'Pendiente': '#d1d5db'
         };
         // Filtros
         const sortSelect = document.getElementById('rolesSortSelect');
@@ -506,7 +518,7 @@ export class DataController {
         
         // Total en elaboración (suma de todas las preguntas en elaboración)
         const totalElaboracion = subcontracts.reduce((acc, sub) => {
-            const enElaboracion = sub.items ? sub.items.filter(item => item.Estado === 'En elaboración').length : 0;
+            const enElaboracion = sub.items ? sub.items.filter(item => item.Estado === 'En elaboración' || item.Estado === 'En elaboración cartografía').length : 0;
             return acc + enElaboracion;
         }, 0);
         
@@ -614,8 +626,8 @@ export class DataController {
                     </thead>
                     <tbody>
                         ${subcontracts.map(subcontract => {
-                            const enElaboracion = subcontract.items.filter(item => item.Estado === 'En elaboración').length;
-                            const pendientes = subcontract.total - subcontract.incorporated - subcontract.editorial - enElaboracion;
+                            const enElaboracion = subcontract.items.filter(item => item.Estado === 'En elaboración' || item.Estado === 'En elaboración cartografía').length;
+                            const pendientes = Math.max(0, subcontract.total - subcontract.incorporated - subcontract.editorial - enElaboracion);
                             const progressPercentage = subcontract.total > 0 ? Math.round((subcontract.incorporated / subcontract.total) * 100) : 0;
                             const incidencia = totalItems > 0 ? ((subcontract.total / totalItems) * 100).toFixed(1) : '0.0';
                             

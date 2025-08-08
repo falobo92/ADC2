@@ -46,7 +46,7 @@ export class DashboardApp {
         const fileInput = this.dom.get('fileInput');
         if (fileInput) fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
         const filterElements = [
-            'weekSelect', 'daySelect', 'tematicaSelect', 'itemSelect', 'personSelect', 'stateSelect', 'subcontractSelect'
+            'weekSelect', 'daySelect', 'tematicaSelect', 'itemSelect', 'personSelect', 'stateSelect', 'subcontractSelect', 'originSelect'
         ];
         const debouncedAnalyze = Utils.debounce(() => this.dataController.applyFiltersAndAnalyze(), 300);
         filterElements.forEach(id => {
@@ -283,9 +283,11 @@ export class DashboardApp {
         if (estado === 'Total') {
             // No filtrar más, mostrar todos
         } else if (estado === 'Pendientes') {
-            // Filtrar los que no son Incorporada ni En revisor editorial
+            // Pendientes: considerar todo lo que no está Incorporada ni En revisor editorial
+            // pero mostrar explícitamente también 'Pendiente', 'En elaboración' y 'En elaboración cartografía'
             filteredData = filteredData.filter(item => 
-                item.Estado !== 'Incorporada' && item.Estado !== 'En revisor editorial' && item.Estado !== 'En elaboración'
+                item.Estado === 'Pendiente' || item.Estado === 'En elaboración' || item.Estado === 'En elaboración cartografía' ||
+                (item.Estado !== 'Incorporada' && item.Estado !== 'En revisor editorial')
             );
         } else {
             filteredData = filteredData.filter(item => item.Estado === estado);

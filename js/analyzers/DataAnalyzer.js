@@ -55,14 +55,14 @@ export class DataAnalyzer {
         const total = data.length;
         const completed = data.filter(item => item.Estado === 'Incorporada').length;
         const inProgress = data.filter(item => 
-            item.Estado !== 'Incorporada' && item.Estado !== 'En elaboración'
+            item.Estado !== 'Incorporada' && item.Estado !== 'En elaboración' && item.Estado !== 'En elaboración cartografía' && item.Estado !== 'Pendiente'
         ).length;
         
         return {
             total,
             completed,
             inProgress,
-            pending: total - completed - inProgress,
+            pending: data.filter(item => item.Estado === 'Pendiente' || item.Estado === 'En elaboración' || item.Estado === 'En elaboración cartografía').length,
             completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
         };
     }

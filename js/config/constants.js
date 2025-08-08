@@ -42,7 +42,8 @@ export const ESTADO_ORDER = [
     'En revisor técnico',
     'En coordinador',
     'En revisor editorial',
-    'Incorporada'
+    'Incorporada',
+    'Pendiente'
 ];
 
 export const ESTADO_COLORS = {
@@ -53,16 +54,19 @@ export const ESTADO_COLORS = {
     'En coordinador': '#577590',
     'En revisor editorial': '#B56576',
     'Incorporada': '#90BE6D',
+    'Pendiente': '#D1D5DB',
     'default': '#9CA3AF'
 };
 
 export const ESTADO_FONT_COLORS = {
     'En elaboración': '#FFFFFF',
-    'En elaboración de cartografía': '#000000',
+    'En elaboración cartografía': '#000000',
     'En revisor técnico': '#FFFFFF',
     'En coordinador': '#FFFFFF',
     'En revisor editorial': '#FFFFFF',
     'Incorporada': '#000000',
+    'Subcontrato': '#000000',
+    'Pendiente': '#000000',
     'default': '#FFFFFF'
 };
 
